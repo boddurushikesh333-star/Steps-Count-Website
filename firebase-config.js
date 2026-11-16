@@ -4,7 +4,7 @@
  */
 
 window.FIREBASE_CONFIG = {
-  apiKey: "AIzaSyAQNXI7k8POxWhrTwVhZRpzu6wS3AYisd8",
+  apiKey: "AIzaSyAQNXI7k8POXWhrTwVhZRpzu6wS3AYisd8",
   authDomain: "steps-count-fa7a6.firebaseapp.com",
   projectId: "steps-count-fa7a6",
   storageBucket: "steps-count-fa7a6.firebasestorage.app",

@@ -880,6 +880,42 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   // User Authentication Controls (Login / Sign Up)
   // ==========================================
+  let toastTimeout = null;
+  function showToast(message, type = 'success') {
+    const toast = document.getElementById('toastNotification');
+    const toastBox = document.getElementById('toastBox');
+    const toastMessage = document.getElementById('toastMessage');
+    const toastIcon = document.getElementById('toastIcon');
+    const toastIconContainer = document.getElementById('toastIconContainer');
+
+    if (!toast) return;
+
+    toastMessage.textContent = message;
+
+    if (type === 'success') {
+      toastBox.className = 'flex items-center gap-3 px-4 py-3 rounded-2xl border shadow-2xl backdrop-blur-md bg-emerald-950/95 border-emerald-500/50 text-emerald-200';
+      toastIconContainer.className = 'w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0';
+      toastIcon.setAttribute('data-lucide', 'check-circle');
+      toastIcon.className = 'w-4 h-4 text-emerald-400';
+    } else {
+      toastBox.className = 'flex items-center gap-3 px-4 py-3 rounded-2xl border shadow-2xl backdrop-blur-md bg-rose-950/95 border-rose-500/50 text-rose-200';
+      toastIconContainer.className = 'w-8 h-8 rounded-full bg-rose-500/20 flex items-center justify-center shrink-0';
+      toastIcon.setAttribute('data-lucide', 'alert-circle');
+      toastIcon.className = 'w-4 h-4 text-rose-400';
+    }
+    lucide.createIcons();
+
+    // Show animation
+    toast.classList.remove('-translate-y-24', 'opacity-0', 'pointer-events-none');
+    toast.classList.add('translate-y-0', 'opacity-100');
+
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => {
+      toast.classList.remove('translate-y-0', 'opacity-100');
+      toast.classList.add('-translate-y-24', 'opacity-0', 'pointer-events-none');
+    }, 3800);
+  }
+
   function updateUserHeader(user) {
     if (user && !user.isAnonymous) {
       els.headerLoginBtn.classList.add('hidden');
@@ -944,9 +980,11 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       els.loginSubmitBtn.disabled = true;
       els.loginSubmitBtn.textContent = 'Signing in...';
-      await firebaseService.signInWithEmail(email, password);
+      const user = await firebaseService.signInWithEmail(email, password);
       closeModal(els.authModal);
       els.loginForm.reset();
+      const displayName = (user && user.displayName) || email.split('@')[0];
+      showToast(`🎉 Logged in successfully! Welcome back, ${displayName}!`);
     } catch (err) {
       showAuthError(err.message);
     } finally {
@@ -975,6 +1013,7 @@ document.addEventListener('DOMContentLoaded', () => {
       await firebaseService.signUpWithEmail(email, password, name);
       closeModal(els.authModal);
       els.signupForm.reset();
+      showToast(`🎉 Account created and logged in successfully! Welcome, ${name || 'Walker'}!`);
     } catch (err) {
       showAuthError(err.message);
     } finally {
@@ -991,8 +1030,10 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     try {
-      await firebaseService.signInWithGoogle();
+      const res = await firebaseService.signInWithGoogle();
       closeModal(els.authModal);
+      const name = (res && res.user && res.user.displayName) || 'Walker';
+      showToast(`🎉 Logged in with Google successfully! Welcome, ${name}!`);
     } catch (err) {
       showAuthError(err.message);
     }
@@ -1003,6 +1044,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (confirm('Log out of your account? Your data will remain safely stored in Firestore.')) {
       if (firebaseService) {
         await firebaseService.signOut();
+        showToast('👋 Logged out successfully.');
       }
     }
   });

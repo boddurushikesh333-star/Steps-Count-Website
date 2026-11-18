@@ -332,6 +332,54 @@ class StorageManager {
     }
   }
 
+  // Dedicated rich showcase dataset for 1-Click Demo Login
+  seedDemoShowcaseData() {
+    if (Object.keys(this.data.days).length === 0) {
+      this.data.profile = {
+        ...StorageManager.DEFAULT_PROFILE,
+        name: 'Alex (Demo)',
+        dailyGoal: 10000,
+        weightKg: 68,
+        heightCm: 174,
+        strideMeters: 0.72
+      };
+
+      const showcaseSteps = [8940, 10420, 11850, 10310, 12480, 11260];
+      const today = new Date();
+
+      showcaseSteps.forEach((steps, idx) => {
+        const daysAgo = 6 - idx;
+        const d = new Date();
+        d.setDate(today.getDate() - daysAgo);
+        const dateStr = this.getLocalDateString(d);
+        const metrics = this.calculateMetrics(steps, Math.round((steps / 102) * 60));
+        const goal = this.data.profile.dailyGoal;
+
+        this.data.days[dateStr] = {
+          date: dateStr,
+          ...metrics,
+          goal: goal,
+          goalMet: steps >= goal,
+          updatedAt: d.toISOString()
+        };
+      });
+
+      // Today at 78% so clicking +1000 a few times triggers the confetti celebration
+      const todayStr = this.getTodayKey();
+      const todaySteps = 7840;
+      const todayMetrics = this.calculateMetrics(todaySteps, 4560);
+      this.data.days[todayStr] = {
+        date: todayStr,
+        ...todayMetrics,
+        goal: this.data.profile.dailyGoal,
+        goalMet: false,
+        updatedAt: new Date().toISOString()
+      };
+
+      this.save();
+    }
+  }
+
   exportJSON() {
     return JSON.stringify(this.data, null, 2);
   }

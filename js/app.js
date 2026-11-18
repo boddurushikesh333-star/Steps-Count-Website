@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const storage = new StorageManager();
   const charts = new ChartsManager('weeklyChartCanvas', storage);
   let firebaseService = null;
+  let isDemoMode = sessionStorage.getItem('step_pulse_demo_session') === '1';
+  let lastCloudState = null;
 
   // Motivational quotes
   const quotes = [
@@ -85,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Tabs & Navigation
     navTabs: document.querySelectorAll('.nav-tab'),
+    mobileNavTabs: document.querySelectorAll('.mobile-nav-tab'),
     tabPanes: document.querySelectorAll('.tab-pane'),
 
     // Hero Ring & Goal
@@ -128,6 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // History Tab
     historyTableBody: document.getElementById('historyTableBody'),
+    historyCardList: document.getElementById('historyCardList'),
     addPastEntryBtn: document.getElementById('addPastEntryBtn'),
 
     // Settings Tab Form
@@ -180,12 +184,22 @@ document.addEventListener('DOMContentLoaded', () => {
     headerUserPill: document.getElementById('headerUserPill'),
     headerUserAvatar: document.getElementById('headerUserAvatar'),
     headerUserName: document.getElementById('headerUserName'),
+    headerDemoBadge: document.getElementById('headerDemoBadge'),
     headerLogoutBtn: document.getElementById('headerLogoutBtn'),
+
+    // Demo Mode Bars & Triggers
+    guestDemoBar: document.getElementById('guestDemoBar'),
+    activeDemoBar: document.getElementById('activeDemoBar'),
+    bannerDemoLoginBtn: document.getElementById('bannerDemoLoginBtn'),
+    bannerRealLoginBtn: document.getElementById('bannerRealLoginBtn'),
+    switchRealAccountBtn: document.getElementById('switchRealAccountBtn'),
+    exitDemoBtn: document.getElementById('exitDemoBtn'),
 
     authModal: document.getElementById('authModal'),
     closeAuthModalBtn: document.getElementById('closeAuthModalBtn'),
     authErrorAlert: document.getElementById('authErrorAlert'),
     authErrorText: document.getElementById('authErrorText'),
+    authDemoLoginBtn: document.getElementById('authDemoLoginBtn'),
     tabAuthLogin: document.getElementById('tabAuthLogin'),
     tabAuthSignup: document.getElementById('tabAuthSignup'),
     loginForm: document.getElementById('loginForm'),
@@ -212,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Add to today's cumulative count
       const result = storage.addSteps(1, 1);
-      if (firebaseService) firebaseService.queueSyncToday();
+      if (firebaseService && !isDemoMode) firebaseService.queueSyncToday();
       
       // Update UI displays
       updateSessionDisplay(sessionSteps, cadence);
@@ -251,37 +265,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateSessionControlStates(status) {
     if (status === 'tracking') {
-      els.livePedometerIndicator.className = 'w-3.5 h-3.5 rounded-full bg-emerald-400 pulse-indicator';
+      els.livePedometerIndicator.className = 'w-3.5 h-3.5 rounded-full bg-emerald-400 pulse-indicator shrink-0';
       els.pedometerStatusPill.textContent = 'Active Walking';
       els.pedometerStatusPill.className = 'text-[10px] font-semibold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
       els.startSessionBtn.disabled = true;
-      els.startSessionBtn.className = 'flex-1 py-3 px-4 rounded-xl bg-white/10 text-gray-500 font-bold text-sm flex items-center justify-center gap-2 cursor-not-allowed';
+      els.startSessionBtn.className = 'col-span-2 sm:flex-1 min-h-[48px] py-3 px-4 rounded-xl bg-white/10 text-gray-500 font-bold text-sm flex items-center justify-center gap-2 cursor-not-allowed';
       els.pauseSessionBtn.disabled = false;
-      els.pauseSessionBtn.className = 'py-3 px-5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 font-bold text-sm flex items-center justify-center gap-2 transition btn-press cursor-pointer';
+      els.pauseSessionBtn.className = 'min-h-[46px] py-3 px-4 sm:px-5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 font-bold text-sm flex items-center justify-center gap-2 transition btn-press cursor-pointer';
       els.stopSessionBtn.disabled = false;
-      els.stopSessionBtn.className = 'py-3 px-5 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:bg-rose-500/30 font-bold text-sm flex items-center justify-center gap-2 transition btn-press cursor-pointer';
+      els.stopSessionBtn.className = 'min-h-[46px] py-3 px-4 sm:px-5 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:bg-rose-500/30 font-bold text-sm flex items-center justify-center gap-2 transition btn-press cursor-pointer';
     } else if (status === 'paused') {
-      els.livePedometerIndicator.className = 'w-3.5 h-3.5 rounded-full bg-amber-400';
+      els.livePedometerIndicator.className = 'w-3.5 h-3.5 rounded-full bg-amber-400 shrink-0';
       els.pedometerStatusPill.textContent = 'Paused';
       els.pedometerStatusPill.className = 'text-[10px] font-semibold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 border border-amber-500/30';
       els.startSessionBtn.disabled = false;
       els.startSessionBtn.innerHTML = `<i data-lucide="play" class="w-4 h-4 fill-current"></i><span>Resume Walk</span>`;
-      els.startSessionBtn.className = 'flex-1 py-3 px-4 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-brand-500/25 transition btn-press cursor-pointer';
+      els.startSessionBtn.className = 'col-span-2 sm:flex-1 min-h-[48px] py-3 px-4 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-brand-500/25 transition btn-press cursor-pointer';
       els.pauseSessionBtn.disabled = true;
-      els.pauseSessionBtn.className = 'py-3 px-5 rounded-xl bg-white/10 text-gray-500 font-bold text-sm flex items-center justify-center gap-2 cursor-not-allowed';
+      els.pauseSessionBtn.className = 'min-h-[46px] py-3 px-4 sm:px-5 rounded-xl bg-white/10 text-gray-500 font-bold text-sm flex items-center justify-center gap-2 cursor-not-allowed';
       lucide.createIcons();
     } else {
       // Idle
-      els.livePedometerIndicator.className = 'w-3.5 h-3.5 rounded-full bg-gray-500';
+      els.livePedometerIndicator.className = 'w-3.5 h-3.5 rounded-full bg-gray-500 shrink-0';
       els.pedometerStatusPill.textContent = 'Idle';
       els.pedometerStatusPill.className = 'text-[10px] font-semibold px-2 py-0.5 rounded-md bg-white/10 text-gray-400';
       els.startSessionBtn.disabled = false;
       els.startSessionBtn.innerHTML = `<i data-lucide="play" class="w-4 h-4 fill-current"></i><span>Start Walk</span>`;
-      els.startSessionBtn.className = 'flex-1 py-3 px-4 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-brand-500/25 transition btn-press cursor-pointer';
+      els.startSessionBtn.className = 'col-span-2 sm:flex-1 min-h-[48px] py-3 px-4 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-brand-500/25 transition btn-press cursor-pointer';
       els.pauseSessionBtn.disabled = true;
-      els.pauseSessionBtn.className = 'py-3 px-5 rounded-xl bg-white/10 text-gray-500 font-bold text-sm flex items-center justify-center gap-2 cursor-not-allowed';
+      els.pauseSessionBtn.className = 'min-h-[46px] py-3 px-4 sm:px-5 rounded-xl bg-white/10 text-gray-500 font-bold text-sm flex items-center justify-center gap-2 cursor-not-allowed';
       els.stopSessionBtn.disabled = true;
-      els.stopSessionBtn.className = 'py-3 px-5 rounded-xl bg-white/10 text-gray-500 font-bold text-sm flex items-center justify-center gap-2 cursor-not-allowed';
+      els.stopSessionBtn.className = 'min-h-[46px] py-3 px-4 sm:px-5 rounded-xl bg-white/10 text-gray-500 font-bold text-sm flex items-center justify-center gap-2 cursor-not-allowed';
       lucide.createIcons();
     }
   }
@@ -367,10 +381,11 @@ document.addEventListener('DOMContentLoaded', () => {
     els.statBestDayDate.textContent = bestDay.date;
   }
 
-  // Refresh History Table
+  // Refresh History Table (Desktop) & Card List (Mobile)
   function refreshHistory() {
     const list = storage.getHistoryList(30);
     els.historyTableBody.innerHTML = '';
+    if (els.historyCardList) els.historyCardList.innerHTML = '';
     const profile = storage.getProfile();
 
     if (list.length === 0) {
@@ -381,13 +396,17 @@ document.addEventListener('DOMContentLoaded', () => {
           </td>
         </tr>
       `;
+      if (els.historyCardList) {
+        els.historyCardList.innerHTML = `
+          <div class="text-center py-8 text-gray-500 text-sm">
+            No activity records found. Start walking or log a day!
+          </div>
+        `;
+      }
       return;
     }
 
     list.forEach(rec => {
-      const tr = document.createElement('tr');
-      tr.className = 'hover:bg-white/5 transition';
-
       const isGoalMet = rec.steps >= (rec.goal || profile.dailyGoal);
       let dist = rec.distanceKm || 0;
       let unitLabel = 'km';
@@ -398,17 +417,19 @@ document.addEventListener('DOMContentLoaded', () => {
         dist = dist.toFixed(2);
       }
 
+      const statusBadge = isGoalMet
+        ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Achieved</span>`
+        : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-white/5 text-gray-400">In Progress</span>`;
+
+      // 1. Desktop Table Row
+      const tr = document.createElement('tr');
+      tr.className = 'hover:bg-white/5 transition';
       tr.innerHTML = `
         <td class="py-3 px-3 font-medium text-gray-200">${rec.date}</td>
         <td class="py-3 px-3 font-bold text-white">${rec.steps.toLocaleString()}</td>
         <td class="py-3 px-3 text-gray-400">${dist} ${unitLabel}</td>
         <td class="py-3 px-3 text-amber-400 font-medium">${(rec.calories || 0)} kcal</td>
-        <td class="py-3 px-3 text-center">
-          ${isGoalMet 
-            ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Achieved</span>`
-            : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-white/5 text-gray-400">In Progress</span>`
-          }
-        </td>
+        <td class="py-3 px-3 text-center">${statusBadge}</td>
         <td class="py-3 px-3 text-right space-x-1">
           <button class="edit-record-btn p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition" data-date="${rec.date}" data-steps="${rec.steps}" title="Edit entry">
             <i data-lucide="edit-3" class="w-4 h-4"></i>
@@ -419,34 +440,71 @@ document.addEventListener('DOMContentLoaded', () => {
         </td>
       `;
       els.historyTableBody.appendChild(tr);
+
+      // 2. Mobile Native Card
+      if (els.historyCardList) {
+        const card = document.createElement('div');
+        card.className = 'p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-2.5';
+        card.innerHTML = `
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-semibold text-gray-300">${rec.date}</span>
+            ${statusBadge}
+          </div>
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <div class="text-xl font-extrabold text-white leading-none">${rec.steps.toLocaleString()} <span class="text-xs font-medium text-gray-400">steps</span></div>
+              <div class="text-xs text-gray-400 mt-1.5 flex items-center gap-2.5">
+                <span class="text-cyan-300 font-medium">${dist} ${unitLabel}</span>
+                <span class="text-gray-600">&bull;</span>
+                <span class="text-amber-400 font-medium">${(rec.calories || 0)} kcal</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button class="edit-record-btn p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white transition" data-date="${rec.date}" data-steps="${rec.steps}" title="Edit entry">
+                <i data-lucide="edit-3" class="w-4 h-4"></i>
+              </button>
+              <button class="delete-record-btn p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 transition" data-date="${rec.date}" title="Delete entry">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        `;
+        els.historyCardList.appendChild(card);
+      }
     });
 
-    // Reinitialize icons in newly created table rows
+    // Reinitialize icons in newly created rows & cards
     lucide.createIcons();
 
-    // Attach row events
-    els.historyTableBody.querySelectorAll('.edit-record-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const date = btn.dataset.date;
-        const steps = btn.dataset.steps;
-        els.inputManualDate.value = date;
-        els.inputManualSteps.value = steps;
-        document.querySelector('input[name="manualMode"][value="set"]').checked = true;
-        openModal(els.manualAddModal);
+    // Attach events to both desktop table and mobile cards
+    const bindHistoryActions = (container) => {
+      if (!container) return;
+      container.querySelectorAll('.edit-record-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const date = btn.dataset.date;
+          const steps = btn.dataset.steps;
+          els.inputManualDate.value = date;
+          els.inputManualSteps.value = steps;
+          document.querySelector('input[name="manualMode"][value="set"]').checked = true;
+          openModal(els.manualAddModal);
+        });
       });
-    });
 
-    els.historyTableBody.querySelectorAll('.delete-record-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const date = btn.dataset.date;
-        if (confirm(`Are you sure you want to delete data for ${date}?`)) {
-          storage.deleteRecord(date);
-          refreshDashboard();
-          refreshTrends();
-          refreshHistory();
-        }
+      container.querySelectorAll('.delete-record-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const date = btn.dataset.date;
+          if (confirm(`Are you sure you want to delete data for ${date}?`)) {
+            storage.deleteRecord(date);
+            refreshDashboard();
+            refreshTrends();
+            refreshHistory();
+          }
+        });
       });
-    });
+    };
+
+    bindHistoryActions(els.historyTableBody);
+    bindHistoryActions(els.historyCardList);
   }
 
   // Populate settings form
@@ -507,36 +565,66 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 5. Event Listeners Setup
 
-  // Tab switching
-  els.navTabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      const targetId = tab.dataset.tab;
-
-      // Update tab active classes
-      els.navTabs.forEach(t => {
-        t.className = 'nav-tab py-3 px-3 sm:px-4 text-sm font-semibold flex items-center gap-2 border-b-2 border-transparent text-gray-400 hover:text-gray-200 transition-colors whitespace-nowrap';
-      });
-      tab.className = 'nav-tab py-3 px-3 sm:px-4 text-sm font-semibold flex items-center gap-2 border-b-2 border-brand-500 text-brand-400 transition-colors whitespace-nowrap';
-
-      // Hide all panes and display target
-      els.tabPanes.forEach(pane => {
-        if (pane.id === targetId) {
-          pane.classList.remove('hidden');
-        } else {
-          pane.classList.add('hidden');
-        }
-      });
-
-      if (targetId === 'tab-dashboard') {
-        refreshDashboard();
-      } else if (targetId === 'tab-trends') {
-        refreshTrends();
-      } else if (targetId === 'tab-history') {
-        refreshHistory();
-      } else if (targetId === 'tab-settings') {
-        populateSettings();
+  // Tab switching (synchronized between Desktop top bar & Mobile bottom bar)
+  function switchTab(targetId) {
+    // Update desktop top nav active classes
+    els.navTabs.forEach(t => {
+      if (t.dataset.tab === targetId) {
+        t.className = 'nav-tab py-3 px-4 text-sm font-semibold flex items-center gap-2 border-b-2 border-brand-500 text-brand-400 transition-colors whitespace-nowrap';
+      } else {
+        t.className = 'nav-tab py-3 px-4 text-sm font-semibold flex items-center gap-2 border-b-2 border-transparent text-gray-400 hover:text-gray-200 transition-colors whitespace-nowrap';
       }
     });
+
+    // Update mobile bottom nav active classes
+    els.mobileNavTabs.forEach(t => {
+      const indicator = t.querySelector('.mobile-tab-indicator');
+      if (t.dataset.tab === targetId) {
+        t.className = 'mobile-nav-tab mobile-nav-tab-active relative flex flex-col items-center justify-center py-1.5 rounded-xl text-brand-400 transition btn-press';
+        if (indicator) {
+          indicator.classList.remove('opacity-0');
+          indicator.classList.add('opacity-100');
+        }
+      } else {
+        t.className = 'mobile-nav-tab relative flex flex-col items-center justify-center py-1.5 rounded-xl text-gray-400 hover:text-gray-200 transition btn-press';
+        if (indicator) {
+          indicator.classList.remove('opacity-100');
+          indicator.classList.add('opacity-0');
+        }
+      }
+    });
+
+    // Hide all panes and display target
+    els.tabPanes.forEach(pane => {
+      if (pane.id === targetId) {
+        pane.classList.remove('hidden');
+      } else {
+        pane.classList.add('hidden');
+      }
+    });
+
+    if (targetId === 'tab-dashboard') {
+      refreshDashboard();
+    } else if (targetId === 'tab-trends') {
+      refreshTrends();
+    } else if (targetId === 'tab-history') {
+      refreshHistory();
+    } else if (targetId === 'tab-settings') {
+      populateSettings();
+    }
+
+    // Smooth scroll to top on mobile tab change
+    if (window.innerWidth < 640) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  els.navTabs.forEach(tab => {
+    tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+  });
+
+  els.mobileNavTabs.forEach(tab => {
+    tab.addEventListener('click', () => switchTab(tab.dataset.tab));
   });
 
   // Sound toggle button in header
@@ -553,10 +641,10 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateSoundIcon(enabled) {
     if (enabled) {
       els.soundIcon.setAttribute('data-lucide', 'volume-2');
-      els.soundToggleBtn.className = 'p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-brand-400 transition';
+      els.soundToggleBtn.className = 'hidden sm:inline-flex p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-brand-400 transition';
     } else {
       els.soundIcon.setAttribute('data-lucide', 'volume-x');
-      els.soundToggleBtn.className = 'p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-500 transition';
+      els.soundToggleBtn.className = 'hidden sm:inline-flex p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-gray-500 transition';
     }
     lucide.createIcons();
   }
@@ -570,7 +658,7 @@ document.addEventListener('DOMContentLoaded', () => {
         navigator.vibrate(30);
       }
       const res = storage.addSteps(amount, Math.round(amount * 0.6));
-      if (firebaseService) firebaseService.queueSyncToday();
+      if (firebaseService && !isDemoMode) firebaseService.queueSyncToday();
       refreshDashboard();
       if (res.justAchievedGoal) {
         triggerGoalCelebration();
@@ -626,7 +714,7 @@ document.addEventListener('DOMContentLoaded', () => {
       storage.setStepsForDate(date, steps);
     }
 
-    if (firebaseService) firebaseService.queueSyncToday();
+    if (firebaseService && !isDemoMode) firebaseService.queueSyncToday();
 
     closeModal(els.manualAddModal);
     refreshDashboard();
@@ -752,10 +840,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   function updateCloudUI(state) {
     if (!state) return;
+    lastCloudState = state;
+
+    if (isDemoMode) {
+      els.cloudStatusText.textContent = 'Demo Sandbox';
+      els.cloudStatusBtn.className = 'flex items-center space-x-1.5 p-2 sm:px-2.5 sm:py-1.5 rounded-xl sm:rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/35 text-xs font-semibold text-amber-300 transition btn-press';
+      lucide.createIcons();
+      return;
+    }
 
     if (state.syncStatus === 'connected') {
       els.cloudStatusText.textContent = 'Firestore Synced';
-      els.cloudStatusBtn.className = 'flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-xs font-semibold text-emerald-300 transition btn-press';
+      els.cloudStatusBtn.className = 'flex items-center space-x-1.5 p-2 sm:px-2.5 sm:py-1.5 rounded-xl sm:rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-xs font-semibold text-emerald-300 transition btn-press';
       els.firebaseStatusDot.className = 'w-3 h-3 rounded-full bg-emerald-400 pulse-indicator';
       els.firebaseStatusTitle.textContent = 'Connected to Firestore';
       els.firebaseStatusDetails.textContent = 'Real-time database sync active';
@@ -782,7 +878,7 @@ document.addEventListener('DOMContentLoaded', () => {
       els.syncNowBtn.disabled = true;
     } else if (state.syncStatus === 'error') {
       els.cloudStatusText.textContent = 'Sync Error';
-      els.cloudStatusBtn.className = 'flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-xs font-semibold text-rose-300 transition btn-press';
+      els.cloudStatusBtn.className = 'flex items-center space-x-1.5 p-2 sm:px-2.5 sm:py-1.5 rounded-xl sm:rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-xs font-semibold text-rose-300 transition btn-press';
       els.firebaseStatusDot.className = 'w-3 h-3 rounded-full bg-rose-400';
       els.firebaseStatusTitle.textContent = 'Connection Error';
       els.firebaseStatusDetails.textContent = state.syncError || 'Check your config';
@@ -790,7 +886,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       // unconfigured
       els.cloudStatusText.textContent = 'Connect Cloud';
-      els.cloudStatusBtn.className = 'flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-gray-300 transition btn-press';
+      els.cloudStatusBtn.className = 'flex items-center space-x-1.5 p-2 sm:px-2.5 sm:py-1.5 rounded-xl sm:rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-gray-300 transition btn-press';
       els.firebaseStatusDot.className = 'w-3 h-3 rounded-full bg-gray-500';
       els.firebaseStatusTitle.textContent = 'Not Connected';
       els.firebaseStatusDetails.textContent = 'Using offline LocalStorage';
@@ -918,15 +1014,80 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateUserHeader(user) {
-    if (user && !user.isAnonymous) {
+    if (isDemoMode) {
+      els.headerLoginBtn.classList.add('hidden');
+      els.headerUserPill.classList.remove('hidden');
+      els.headerUserName.textContent = 'Alex';
+      els.headerUserAvatar.textContent = 'A';
+      els.headerUserAvatar.className = 'w-6 h-6 rounded-full bg-gradient-to-tr from-amber-500 to-orange-400 text-slate-950 font-extrabold text-xs flex items-center justify-center shrink-0';
+      if (els.headerDemoBadge) els.headerDemoBadge.classList.remove('hidden');
+      if (els.guestDemoBar) els.guestDemoBar.classList.add('hidden');
+      if (els.activeDemoBar) els.activeDemoBar.classList.remove('hidden');
+    } else if (user && !user.isAnonymous) {
       els.headerLoginBtn.classList.add('hidden');
       els.headerUserPill.classList.remove('hidden');
       const name = user.displayName || (user.email ? user.email.split('@')[0] : 'Walker');
       els.headerUserName.textContent = name;
       els.headerUserAvatar.textContent = (name[0] || 'U').toUpperCase();
+      els.headerUserAvatar.className = 'w-6 h-6 rounded-full bg-gradient-to-tr from-brand-500 to-cyan-400 text-white font-bold text-xs flex items-center justify-center shrink-0';
+      if (els.headerDemoBadge) els.headerDemoBadge.classList.add('hidden');
+      if (els.guestDemoBar) els.guestDemoBar.classList.add('hidden');
+      if (els.activeDemoBar) els.activeDemoBar.classList.add('hidden');
     } else {
       els.headerLoginBtn.classList.remove('hidden');
       els.headerUserPill.classList.add('hidden');
+      if (els.headerDemoBadge) els.headerDemoBadge.classList.add('hidden');
+      if (els.guestDemoBar) els.guestDemoBar.classList.remove('hidden');
+      if (els.activeDemoBar) els.activeDemoBar.classList.add('hidden');
+    }
+  }
+
+  // 1-Click Instant Demo Login (Completely isolated from real Firebase accounts)
+  function enterDemoMode(silent = false) {
+    isDemoMode = true;
+    sessionStorage.setItem('step_pulse_demo_session', '1');
+    storage.switchUser('demo_user_showcase', 'Alex (Demo)');
+    storage.seedDemoShowcaseData();
+
+    closeModal(els.authModal);
+    updateUserHeader(null);
+    if (lastCloudState) {
+      updateCloudUI(lastCloudState);
+    } else {
+      els.cloudStatusText.textContent = 'Demo Sandbox';
+      els.cloudStatusBtn.className = 'flex items-center space-x-1.5 p-2 sm:px-2.5 sm:py-1.5 rounded-xl sm:rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/35 text-xs font-semibold text-amber-300 transition btn-press';
+    }
+
+    populateSettings();
+    refreshDashboard();
+    refreshTrends();
+    refreshHistory();
+    lucide.createIcons();
+
+    if (!silent) {
+      soundSynth.playStepBlip();
+      showToast('🎉 Demo Login successful! Exploring as Alex (Demo).');
+    }
+  }
+
+  function exitDemoMode(silent = false) {
+    isDemoMode = false;
+    sessionStorage.removeItem('step_pulse_demo_session');
+    storage.switchUser('guest');
+
+    updateUserHeader(null);
+    if (lastCloudState) {
+      updateCloudUI(lastCloudState);
+    }
+
+    populateSettings();
+    refreshDashboard();
+    refreshTrends();
+    refreshHistory();
+    lucide.createIcons();
+
+    if (!silent) {
+      showToast('👋 Exited Demo Mode.');
     }
   }
 
@@ -962,6 +1123,29 @@ document.addEventListener('DOMContentLoaded', () => {
     openModal(els.authModal);
   });
 
+  // Demo Login & Banner Buttons
+  if (els.bannerDemoLoginBtn) {
+    els.bannerDemoLoginBtn.addEventListener('click', () => enterDemoMode(false));
+  }
+  if (els.authDemoLoginBtn) {
+    els.authDemoLoginBtn.addEventListener('click', () => enterDemoMode(false));
+  }
+  if (els.bannerRealLoginBtn) {
+    els.bannerRealLoginBtn.addEventListener('click', () => {
+      clearAuthError();
+      openModal(els.authModal);
+    });
+  }
+  if (els.switchRealAccountBtn) {
+    els.switchRealAccountBtn.addEventListener('click', () => {
+      clearAuthError();
+      openModal(els.authModal);
+    });
+  }
+  if (els.exitDemoBtn) {
+    els.exitDemoBtn.addEventListener('click', () => exitDemoMode(false));
+  }
+
   els.closeAuthModalBtn.addEventListener('click', () => closeModal(els.authModal));
   els.authGuestBtn.addEventListener('click', () => closeModal(els.authModal));
 
@@ -981,6 +1165,8 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       els.loginSubmitBtn.disabled = true;
       els.loginSubmitBtn.textContent = 'Signing in...';
+      isDemoMode = false;
+      sessionStorage.removeItem('step_pulse_demo_session');
       const user = await firebaseService.signInWithEmail(email, password);
       closeModal(els.authModal);
       els.loginForm.reset();
@@ -1011,6 +1197,8 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       els.signupSubmitBtn.disabled = true;
       els.signupSubmitBtn.textContent = 'Creating account...';
+      isDemoMode = false;
+      sessionStorage.removeItem('step_pulse_demo_session');
       await firebaseService.signUpWithEmail(email, password, name);
       closeModal(els.authModal);
       els.signupForm.reset();
@@ -1031,6 +1219,8 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     try {
+      isDemoMode = false;
+      sessionStorage.removeItem('step_pulse_demo_session');
       const res = await firebaseService.signInWithGoogle();
       closeModal(els.authModal);
       const name = (res && res.user && res.user.displayName) || 'Walker';
@@ -1042,6 +1232,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Header logout button
   els.headerLogoutBtn.addEventListener('click', async () => {
+    if (isDemoMode) {
+      exitDemoMode(false);
+      return;
+    }
     if (confirm('Log out of your account? Your data will remain safely stored in Firestore.')) {
       if (firebaseService) {
         await firebaseService.signOut();
@@ -1050,9 +1244,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Listen to user switch events
+  // Listen to user switch events from Firebase Auth
   window.addEventListener('steppulse:user_changed', (e) => {
-    updateUserHeader(e.detail.user);
+    const user = e.detail.user;
+    if (user && !user.isAnonymous) {
+      // Real user signed in -> exit demo mode cleanly
+      isDemoMode = false;
+      sessionStorage.removeItem('step_pulse_demo_session');
+      updateUserHeader(user);
+      if (lastCloudState) updateCloudUI(lastCloudState);
+    } else if (isDemoMode) {
+      // Preserve active Demo Mode if Firebase reports no real logged-in user
+      storage.switchUser('demo_user_showcase', 'Alex (Demo)');
+      storage.seedDemoShowcaseData();
+      updateUserHeader(null);
+    } else {
+      updateUserHeader(null);
+    }
     populateSettings();
     refreshDashboard();
     refreshTrends();
@@ -1061,30 +1269,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Window cloud sync events
   window.addEventListener('steppulse:cloud_update', () => {
+    if (isDemoMode) return;
     refreshDashboard();
     refreshTrends();
     refreshHistory();
   });
 
   window.addEventListener('steppulse:cloud_synced', () => {
+    if (isDemoMode) return;
     refreshDashboard();
     refreshTrends();
     refreshHistory();
   });
 
-  // Set random motivational quote
-  const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
-  els.motivationalQuote.textContent = `"${randomQuote}"`;
+  // Set lead motivational quote
+  els.motivationalQuote.textContent = `"${quotes[0]}"`;
 
   // Initialize Firebase Service
   if (typeof FirebaseService !== 'undefined') {
     firebaseService = new FirebaseService(storage, (state) => updateCloudUI(state));
   }
 
-  // Initial renders
-  populateSettings();
+  // Restore Demo Mode if active in current session
+  if (isDemoMode) {
+    enterDemoMode(true);
+  } else {
+    updateUserHeader(null);
+    populateSettings();
+    refreshDashboard();
+  }
+
   updateSoundIcon(storage.getProfile().soundEnabled);
-  refreshDashboard();
   charts.init();
   lucide.createIcons();
 });

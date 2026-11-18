@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Motivational quotes
   const quotes = [
+    "Every Step Counts. Every Step Matters.",
     "A single step is all it takes to build momentum. Keep walking!",
     "Every step you take brings you closer to a healthier you.",
     "Small steps every day add up to big achievements.",

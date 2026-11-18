@@ -1,6 +1,7 @@
 {
-  "name": "StepPulse - Step & Fitness Tracker",
+  "name": "StepPulse — Every Step Counts. Every Step Matters.",
   "short_name": "StepPulse",
+  "description": "Every Step Counts. Every Step Matters. Real-time step tracker with goals, streaks, and cloud sync.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0B0F17",

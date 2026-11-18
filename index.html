@@ -3,7 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>StepPulse - Modern Step & Fitness Tracker</title>
+  <title>StepPulse — Every Step Counts. Every Step Matters.</title>
+  <meta name="description" content="Every Step Counts. Every Step Matters. Precision step tracking, daily goals, streak analytics, and real-time cloud sync.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="StepPulse — Every Step Counts. Every Step Matters.">
+  <meta property="og:description" content="Every Step Counts. Every Step Matters. Track your daily steps, calories, distance, and streaks with real-time cloud sync.">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="StepPulse — Every Step Counts. Every Step Matters.">
+  <meta name="twitter:description" content="Every Step Counts. Every Step Matters. Track your daily steps, calories, distance, and streaks.">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#10B981">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -57,7 +64,10 @@
             StepPulse
             <span class="text-[10px] tracking-wider uppercase font-semibold px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-400 border border-brand-500/30">PRO</span>
           </h1>
-          <p class="text-xs text-gray-400" id="currentDateDisplay">Today's Activity</p>
+          <p class="text-[11px] font-bold tracking-wide flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse shrink-0"></span>
+            <span class="tagline-shimmer">Every Step Counts. Every Step Matters.</span>
+          </p>
         </div>
       </div>
 
@@ -124,6 +134,25 @@
     <!-- TAB 1: DASHBOARD VIEW -->
     <!-- ========================================== -->
     <section id="tab-dashboard" class="tab-pane space-y-6">
+
+      <!-- Inspiring Signature Tagline Banner -->
+      <div class="tagline-banner p-4 sm:px-6 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 backdrop-blur-md">
+        <div class="flex items-center space-x-3.5">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-500/20 to-cyan-500/20 border border-brand-500/35 flex items-center justify-center text-brand-400 shrink-0 shadow-inner">
+            <i data-lucide="sparkles" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h2 class="text-sm sm:text-lg font-extrabold tracking-tight tagline-shimmer">
+              &ldquo;Every Step Counts. Every Step Matters.&rdquo;
+            </h2>
+            <p class="text-[11px] sm:text-xs text-gray-400">Build unstoppable momentum &mdash; one stride at a time.</p>
+          </div>
+        </div>
+        <div class="text-xs font-semibold text-gray-300 bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl flex items-center gap-1.5 shrink-0 self-start sm:self-center ml-13 sm:ml-0">
+          <i data-lucide="calendar" class="w-3.5 h-3.5 text-cyan-400"></i>
+          <span id="currentDateDisplay">Today</span>
+        </div>
+      </div>
 
       <!-- Hero Ring & Daily Goal Status Card -->
       <div class="glass-panel-glow rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
@@ -831,8 +860,13 @@
   </div>
 
   <!-- Footer -->
-  <footer class="border-t border-white/5 py-4 text-center text-xs text-gray-500">
-    <p>StepPulse &bull; Walk further, stay healthy &bull; Cloud Firestore &amp; Offline Ready</p>
+  <footer class="border-t border-white/5 py-6 text-center text-xs text-gray-400 space-y-1.5">
+    <p class="text-sm font-extrabold tracking-wide tagline-shimmer">
+      &ldquo;Every Step Counts. Every Step Matters.&rdquo;
+    </p>
+    <p class="text-[11px] text-gray-500">
+      StepPulse PRO &bull; Engineered for everyday fitness &bull; Cloud Firestore &amp; Offline Ready
+    </p>
   </footer>
 
   <!-- Firebase Compat SDK v10 -->
